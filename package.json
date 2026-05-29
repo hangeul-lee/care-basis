@@ -1,0 +1,14 @@
+{
+  "name": "care-basis",
+  "version": "1.0.0",
+  "description": "Trusted infant routine and official parenting information web app.",
+  "type": "module",
+  "scripts": {
+    "dev": "node server/index.js",
+    "start": "node server/index.js",
+    "migrate": "DB_MODE=mysql DB_AUTO_MIGRATE=true node server/migrate.js"
+  },
+  "dependencies": {
+    "mysql2": "^3.11.5"
+  }
+}
