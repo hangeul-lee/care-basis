@@ -1,14 +1,16 @@
 :root {
   color-scheme: light;
-  --bg: #fbfaf7;
-  --paper: #fffefa;
-  --ink: #111111;
-  --muted: #706d68;
-  --muted-soft: #9b9790;
-  --line: #d9d5cc;
-  --line-strong: #111111;
-  --accent: #205d55;
-  --accent-soft: #eef5f2;
+  --bg: #f5fbf8;
+  --paper: #fffffb;
+  --ink: #173935;
+  --muted: #65716e;
+  --muted-soft: #8d9b97;
+  --line: #c8dfd9;
+  --line-strong: #72bdb3;
+  --accent: #23a89a;
+  --accent-deep: #0d7268;
+  --accent-soft: #e4f6f2;
+  --accent-wash: #f0faf7;
   --danger: #9a3d34;
   --danger-soft: #fbefec;
   font-family:
@@ -286,7 +288,7 @@ input:focus,
 select:focus,
 textarea:focus {
   border-color: var(--line-strong);
-  box-shadow: 0 0 0 2px rgba(17, 17, 17, 0.08);
+  box-shadow: 0 0 0 2px rgba(35, 168, 154, 0.14);
 }
 
 .icon {
@@ -322,8 +324,8 @@ textarea:focus {
 
 .icon-button.solid,
 .action-button.primary {
-  border-color: var(--ink);
-  background: var(--ink);
+  border-color: var(--accent-deep);
+  background: var(--accent-deep);
   color: #ffffff;
 }
 
@@ -414,8 +416,8 @@ textarea:focus {
 
 .mobile-tabs button.active,
 .desktop-nav button.active {
-  color: var(--ink);
-  background: #f0eee8;
+  color: var(--accent-deep);
+  background: var(--accent-soft);
 }
 
 .quick-panel {
@@ -470,7 +472,7 @@ textarea:focus {
 }
 
 .quick-action:active {
-  background: #f0eee8;
+  background: var(--accent-wash);
 }
 
 .quick-action strong,
@@ -543,8 +545,41 @@ textarea:focus {
 
 .chip.active {
   color: #ffffff;
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
+}
+
+.tag-panel {
+  display: grid;
+  gap: 9px;
+  padding: 2px 0 4px;
+}
+
+.age-chip-row {
+  gap: 8px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid var(--line);
+}
+
+.topic-chip-row {
+  gap: 6px;
+}
+
+.chip.age-chip {
+  color: var(--accent-deep);
+  background: var(--accent-soft);
+  border-color: #aacfc8;
+}
+
+.chip.topic-chip {
+  background: rgba(255, 255, 251, 0.72);
+}
+
+.chip.age-chip.active,
+.chip.topic-chip.active {
+  color: #ffffff;
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
 }
 
 .quick-settings {
@@ -744,15 +779,15 @@ textarea:focus {
 .check-toggle {
   width: 34px;
   height: 34px;
-  border: 1px solid var(--line-strong);
+  border: 1px solid var(--accent-deep);
   border-radius: 0;
   background: transparent;
   color: #ffffff;
 }
 
 .check-item.done .check-toggle {
-  background: var(--ink);
-  border-color: var(--ink);
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
 }
 
 .item-category {
@@ -895,7 +930,8 @@ textarea:focus {
 }
 
 .grade.top {
-  background: var(--ink);
+  background: var(--accent-deep);
+  border-color: var(--accent-deep);
   color: #ffffff;
 }
 
@@ -1065,7 +1101,7 @@ textarea:focus {
   }
 
   .desktop-nav button.active {
-    box-shadow: inset 3px 0 0 var(--ink);
+    box-shadow: inset 3px 0 0 var(--accent-deep);
   }
 
   .mobile-tabs {

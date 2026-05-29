@@ -158,27 +158,29 @@ function ageTagRank(tag) {
   return { isAge: false, start: 9999, end: 9999, label: tag };
 }
 
-const preferredTagOrder = [
-  "발달",
-  "놀이",
-  "학습",
-  "수유",
-  "이유식",
-  "영양",
-  "수면",
-  "생활리듬",
-  "안전",
-  "건강",
-  "행동",
-  "어린이집",
-  "보육",
-  "누리과정",
-  "상담",
-  "발달지연"
-];
+const redundantAgeTags = new Map([
+  ["4~12개월", ["4~6개월", "7~9개월", "10~12개월"]],
+  ["만3~5세", ["만4~5세"]]
+]);
+
+function compareTextTags(a, b) {
+  return a.localeCompare(b, "ko", { numeric: true, sensitivity: "base" });
+}
 
 function sortSearchTags(tags) {
-  return [...tags].sort((a, b) => {
+  const uniqueTags = Array.from(new Set(tags));
+  const hiddenAgeTags = new Set();
+  const tagSet = new Set(uniqueTags);
+
+  redundantAgeTags.forEach((coveredTags, broadTag) => {
+    if (tagSet.has(broadTag)) {
+      coveredTags.forEach((coveredTag) => hiddenAgeTags.add(coveredTag));
+    }
+  });
+
+  const visibleTags = uniqueTags.filter((tag) => !hiddenAgeTags.has(tag));
+
+  return visibleTags.sort((a, b) => {
     const ageA = ageTagRank(a);
     const ageB = ageTagRank(b);
 
@@ -189,15 +191,16 @@ function sortSearchTags(tags) {
     }
 
     if (ageA.isAge !== ageB.isAge) return ageA.isAge ? -1 : 1;
-
-    const preferredA = preferredTagOrder.indexOf(a);
-    const preferredB = preferredTagOrder.indexOf(b);
-    const rankA = preferredA === -1 ? 999 : preferredA;
-    const rankB = preferredB === -1 ? 999 : preferredB;
-
-    if (rankA !== rankB) return rankA - rankB;
-    return a.localeCompare(b, "ko");
+    return compareTextTags(a, b);
   });
+}
+
+function groupSearchTags(tags) {
+  const sortedTags = sortSearchTags(tags);
+  return {
+    ageTags: sortedTags.filter((tag) => ageTagRank(tag).isAge),
+    topicTags: sortedTags.filter((tag) => !ageTagRank(tag).isAge)
+  };
 }
 
 function EmptyState({ icon = "alert", title, body }) {
@@ -977,10 +980,10 @@ function SearchView() {
       .catch(() => setSources([]));
   }, []);
 
-  const tags = useMemo(() => {
+  const tagGroups = useMemo(() => {
     const tagSet = new Set();
     documents.forEach((document) => (document.tags || []).forEach((item) => tagSet.add(item)));
-    return sortSearchTags(Array.from(tagSet));
+    return groupSearchTags(Array.from(tagSet));
   }, [documents]);
 
   function submit(event) {
@@ -1008,37 +1011,62 @@ function SearchView() {
       }),
       h(IconButton, { icon: "search", label: "검색", type: "submit", variant: "solid" })
     ),
-    tags.length
+    tagGroups.ageTags.length || tagGroups.topicTags.length
       ? h(
           "div",
-          { className: "chip-row" },
+          { className: "tag-panel" },
           h(
-            "button",
-            {
-              type: "button",
-              className: cx("chip", tag === "" && "active"),
-              onClick: () => {
-                setTag("");
-                search(query, "");
-              }
-            },
-            "전체"
-          ),
-          tags.map((item) =>
+            "div",
+            { className: "chip-row age-chip-row" },
             h(
               "button",
               {
                 type: "button",
-                className: cx("chip", tag === item && "active"),
-                key: item,
+                className: cx("chip", "age-chip", tag === "" && "active"),
                 onClick: () => {
-                  setTag(item);
-                  search(query, item);
+                  setTag("");
+                  search(query, "");
                 }
               },
-              item
+              "전체"
+            ),
+            tagGroups.ageTags.map((item) =>
+              h(
+                "button",
+                {
+                  type: "button",
+                  className: cx("chip", "age-chip", tag === item && "active"),
+                  key: item,
+                  onClick: () => {
+                    setTag(item);
+                    search(query, item);
+                  }
+                },
+                item
+              )
             )
-          )
+          ),
+          tagGroups.topicTags.length
+            ? h(
+                "div",
+                { className: "chip-row topic-chip-row" },
+                tagGroups.topicTags.map((item) =>
+                  h(
+                    "button",
+                    {
+                      type: "button",
+                      className: cx("chip", "topic-chip", tag === item && "active"),
+                      key: item,
+                      onClick: () => {
+                        setTag(item);
+                        search(query, item);
+                      }
+                    },
+                    item
+                  )
+                )
+              )
+            : null
         )
       : null,
     error ? h("p", { className: "form-error" }, error) : null,
