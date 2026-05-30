@@ -383,7 +383,7 @@ textarea:focus {
   bottom: 0;
   z-index: 20;
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
+  grid-template-columns: repeat(6, minmax(0, 1fr));
   border-top: 1px solid var(--line-strong);
   background: rgba(251, 250, 247, 0.98);
   backdrop-filter: blur(8px);

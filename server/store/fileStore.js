@@ -7,6 +7,7 @@ import { inferTrustGrade, isTrustedSourceUrl } from "../trustedSources.js";
 const emptyData = {
   babies: [],
   routineEntries: [],
+  routinePlanItems: [],
   infoDocuments: [],
   checklistStatuses: []
 };
@@ -79,7 +80,12 @@ export class FileStore {
 
   async read() {
     const raw = await readFile(this.filePath, "utf-8");
-    return JSON.parse(raw);
+    const data = JSON.parse(raw);
+    return {
+      ...emptyData,
+      ...data,
+      routinePlanItems: data.routinePlanItems || []
+    };
   }
 
   async write(data) {
@@ -174,6 +180,57 @@ export class FileStore {
     data.routineEntries = data.routineEntries.filter((entry) => entry.id !== id);
     await this.write(data);
     return data.routineEntries.length !== before;
+  }
+
+  async listRoutinePlanItems(babyId) {
+    const data = await this.read();
+    return data.routinePlanItems
+      .filter((item) => item.babyId === babyId)
+      .sort((a, b) => `${a.planTime}`.localeCompare(`${b.planTime}`));
+  }
+
+  async createRoutinePlanItem(input) {
+    const data = await this.read();
+    const item = {
+      id: makeId("plan"),
+      babyId: input.babyId,
+      planTime: input.planTime,
+      category: input.category,
+      amount: input.amount || "",
+      note: input.note || "",
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString()
+    };
+
+    data.routinePlanItems.push(item);
+    await this.write(data);
+    return item;
+  }
+
+  async updateRoutinePlanItem(id, input) {
+    const data = await this.read();
+    const index = data.routinePlanItems.findIndex((item) => item.id === id);
+    if (index === -1) return null;
+
+    data.routinePlanItems[index] = {
+      ...data.routinePlanItems[index],
+      planTime: input.planTime || data.routinePlanItems[index].planTime,
+      category: input.category || data.routinePlanItems[index].category,
+      amount: input.amount ?? data.routinePlanItems[index].amount,
+      note: input.note ?? data.routinePlanItems[index].note,
+      updatedAt: new Date().toISOString()
+    };
+
+    await this.write(data);
+    return data.routinePlanItems[index];
+  }
+
+  async deleteRoutinePlanItem(id) {
+    const data = await this.read();
+    const before = data.routinePlanItems.length;
+    data.routinePlanItems = data.routinePlanItems.filter((item) => item.id !== id);
+    await this.write(data);
+    return data.routinePlanItems.length !== before;
   }
 
   async listDocuments() {

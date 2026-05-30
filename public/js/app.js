@@ -5,6 +5,7 @@ const { useEffect, useMemo, useState } = React;
 
 const tabs = [
   { id: "today", label: "오늘", icon: "calendar" },
+  { id: "plan", label: "일과표", icon: "clock" },
   { id: "checklist", label: "체크", icon: "checklist" },
   { id: "search", label: "검색", icon: "search" },
   { id: "news", label: "뉴스", icon: "book" },
@@ -116,6 +117,10 @@ function categoryMeta(category) {
 
 function visibleEntryTime(entry) {
   return String(entry.entryTime || "").slice(0, 5);
+}
+
+function visiblePlanTime(item) {
+  return String(item.planTime || "").slice(0, 5);
 }
 
 function findLastEntry(entries, categories) {
@@ -486,6 +491,122 @@ function RoutineForm({ babyId, date, editingEntry, onSaved, onCancel }) {
   );
 }
 
+function RoutinePlanForm({ babyId, editingItem, onSaved, onCancel }) {
+  const [form, setForm] = useState({
+    babyId,
+    planTime: "07:00",
+    category: "분유",
+    amount: "",
+    note: ""
+  });
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    setForm(
+      editingItem
+        ? {
+            babyId,
+            planTime: visiblePlanTime(editingItem),
+            category: editingItem.category,
+            amount: editingItem.amount || "",
+            note: editingItem.note || ""
+          }
+        : {
+            babyId,
+            planTime: "07:00",
+            category: "분유",
+            amount: "",
+            note: ""
+          }
+    );
+  }, [babyId, editingItem?.id]);
+
+  async function submit(event) {
+    event.preventDefault();
+    setError("");
+
+    try {
+      const payload = {
+        ...form,
+        ...Object.fromEntries(new FormData(event.currentTarget).entries()),
+        babyId
+      };
+      if (editingItem) {
+        await api(`/api/routine-plan/${editingItem.id}`, { method: "PUT", body: JSON.stringify(payload) });
+      } else {
+        await api("/api/routine-plan", { method: "POST", body: JSON.stringify(payload) });
+      }
+      await onSaved();
+      if (!editingItem) {
+        setForm({ ...form, amount: "", note: "" });
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  return h(
+    "form",
+    { className: "routine-form detail-routine-form", onSubmit: submit },
+    h(
+      "div",
+      { className: "compact-form-head" },
+      h("strong", null, editingItem ? "일과 수정" : "일과 추가"),
+      h("span", null, "반복 일과")
+    ),
+    h(
+      "div",
+      { className: "form-grid routine-grid" },
+      h(
+        Field,
+        { label: "시간" },
+        h("input", {
+          name: "planTime",
+          type: "time",
+          value: form.planTime,
+          onChange: (event) => setForm({ ...form, planTime: event.target.value })
+        })
+      ),
+      h(
+        Field,
+        { label: "항목" },
+        h(
+          "select",
+          { name: "category", value: form.category, onChange: (event) => setForm({ ...form, category: event.target.value }) },
+          routineCategories.map((category) => h("option", { key: category.id, value: category.id }, category.id))
+        )
+      ),
+      h(
+        Field,
+        { label: "기준" },
+        h("input", {
+          name: "amount",
+          value: form.amount,
+          onChange: (event) => setForm({ ...form, amount: event.target.value }),
+          placeholder: "120ml, 30분, 등원"
+        })
+      ),
+      h(
+        Field,
+        { label: "메모" },
+        h("input", {
+          name: "note",
+          value: form.note,
+          onChange: (event) => setForm({ ...form, note: event.target.value }),
+          placeholder: "반복 메모"
+        })
+      )
+    ),
+    error ? h("p", { className: "form-error" }, error) : null,
+    h(
+      "div",
+      { className: "form-actions" },
+      h(ActionButton, { type: "submit", icon: editingItem ? "save" : "plus" }, editingItem ? "수정" : "추가"),
+      editingItem ? h(ActionButton, { variant: "secondary", icon: "close", onClick: onCancel }, "취소") : null
+    )
+  );
+}
+
 function TodaySummary({ entries }) {
   return h(
     "div",
@@ -731,6 +852,88 @@ function TodayView({ baby }) {
                 { className: "row-actions" },
                 h(IconButton, { icon: "edit", label: "수정", onClick: () => setEditingEntry(entry) }),
                 h(IconButton, { icon: "trash", label: "삭제", variant: "danger", onClick: () => removeEntry(entry) })
+              )
+            );
+          })
+        )
+  );
+}
+
+function RoutinePlanView({ baby }) {
+  const [items, setItems] = useState([]);
+  const [editingItem, setEditingItem] = useState(null);
+  const [error, setError] = useState("");
+
+  async function loadItems() {
+    if (!baby) return;
+    try {
+      setError("");
+      const result = await api(`/api/routine-plan?babyId=${encodeURIComponent(baby.id)}`);
+      setItems(result.items);
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
+  useEffect(() => {
+    loadItems();
+  }, [baby?.id]);
+
+  async function removeItem(item) {
+    await api(`/api/routine-plan/${item.id}`, { method: "DELETE" });
+    await loadItems();
+  }
+
+  if (!baby) {
+    return h(EmptyState, { icon: "profile", title: "등록된 아기 프로필이 없습니다.", body: "프로필을 먼저 등록해 주세요." });
+  }
+
+  return h(
+    "section",
+    { className: "view-stack" },
+    h(
+      "div",
+      { className: "section-header" },
+      h("div", null, h("h2", null, "하루 일과표 만들기"), h("p", null, `${baby.name} · 반복 루틴 ${items.length}개`))
+    ),
+    h(RoutinePlanForm, {
+      babyId: baby.id,
+      editingItem,
+      onSaved: async () => {
+        setEditingItem(null);
+        await loadItems();
+      },
+      onCancel: () => setEditingItem(null)
+    }),
+    error ? h("p", { className: "form-error" }, error) : null,
+    items.length === 0
+      ? h(EmptyState, { icon: "clock", title: "만든 일과표가 없습니다." })
+      : h(
+          "div",
+          { className: "timeline plan-timeline" },
+          items.map((item) => {
+            const meta = categoryMeta(item.category);
+            return h(
+              "article",
+              { className: "timeline-item plan-item", key: item.id },
+              h("time", null, visiblePlanTime(item)),
+              h(
+                "div",
+                { className: "timeline-body" },
+                h(
+                  "div",
+                  { className: "timeline-main" },
+                  h("span", { className: cx("category-dot", meta.tone) }, h(Icon, { name: meta.icon, size: 16 })),
+                  h("strong", null, item.category),
+                  item.amount ? h("span", { className: "entry-amount" }, item.amount) : null
+                ),
+                item.note ? h("p", null, item.note) : null
+              ),
+              h(
+                "div",
+                { className: "row-actions" },
+                h(IconButton, { icon: "edit", label: "수정", onClick: () => setEditingItem(item) }),
+                h(IconButton, { icon: "trash", label: "삭제", variant: "danger", onClick: () => removeItem(item) })
               )
             );
           })
@@ -1422,6 +1625,7 @@ function App() {
         "div",
         { className: "content-column" },
         activeTab === "today" ? h(TodayView, { baby: selectedBaby }) : null,
+        activeTab === "plan" ? h(RoutinePlanView, { baby: selectedBaby }) : null,
         activeTab === "checklist" ? h(ChecklistView, { baby: selectedBaby }) : null,
         activeTab === "search" ? h(SearchView) : null,
         activeTab === "news" ? h(NewsView) : null,

@@ -81,6 +81,15 @@ function validateRoutine(input) {
   }
 }
 
+function validateRoutinePlan(input) {
+  requireFields(input, ["babyId", "planTime", "category"]);
+  if (!/^\d{2}:\d{2}$/.test(input.planTime)) {
+    const error = new Error("일과표 시간은 HH:MM 형식이어야 합니다.");
+    error.statusCode = 422;
+    throw error;
+  }
+}
+
 function validateDocument(input) {
   requireFields(input, ["title", "summary", "sourceInstitution", "sourceUrl", "lastVerifiedAt", "trustGrade"]);
   if (!isTrustedSourceUrl(input.sourceUrl)) {
@@ -167,6 +176,32 @@ async function handleApi(request, response, url) {
 
   if (request.method === "DELETE" && pathname.startsWith("/api/routines/")) {
     const deleted = await store.deleteRoutineEntry(idFromPath(pathname, "/api/routines/"));
+    return sendJson(response, deleted ? 200 : 404, { deleted });
+  }
+
+  if (request.method === "GET" && pathname === "/api/routine-plan") {
+    const babyId = searchParams.get("babyId");
+    if (!babyId) {
+      return sendJson(response, 422, { error: "babyId가 필요합니다." });
+    }
+    return sendJson(response, 200, { items: await store.listRoutinePlanItems(babyId) });
+  }
+
+  if (request.method === "POST" && pathname === "/api/routine-plan") {
+    const input = await parseJsonBody(request);
+    validateRoutinePlan(input);
+    return sendJson(response, 201, { item: await store.createRoutinePlanItem(input) });
+  }
+
+  if (request.method === "PUT" && pathname.startsWith("/api/routine-plan/")) {
+    const input = await parseJsonBody(request);
+    validateRoutinePlan(input);
+    const item = await store.updateRoutinePlanItem(idFromPath(pathname, "/api/routine-plan/"), input);
+    return item ? sendJson(response, 200, { item }) : sendJson(response, 404, { error: "일과표 항목을 찾을 수 없습니다." });
+  }
+
+  if (request.method === "DELETE" && pathname.startsWith("/api/routine-plan/")) {
+    const deleted = await store.deleteRoutinePlanItem(idFromPath(pathname, "/api/routine-plan/"));
     return sendJson(response, deleted ? 200 : 404, { deleted });
   }
 

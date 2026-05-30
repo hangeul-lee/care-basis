@@ -213,6 +213,60 @@ export class MySqlStore {
     return result.affectedRows > 0;
   }
 
+  async listRoutinePlanItems(babyId) {
+    const rows = await this.query(
+      `SELECT * FROM routine_plan_items
+       WHERE baby_id = :babyId
+       ORDER BY plan_time ASC, created_at ASC`,
+      { babyId }
+    );
+    return rows.map(toCamelRow);
+  }
+
+  async createRoutinePlanItem(input) {
+    const result = await this.query(
+      `INSERT INTO routine_plan_items
+       (baby_id, plan_time, category, amount, note)
+       VALUES (:babyId, :planTime, :category, :amount, :note)`,
+      {
+        babyId: input.babyId,
+        planTime: input.planTime,
+        category: input.category,
+        amount: input.amount || "",
+        note: input.note || ""
+      }
+    );
+
+    const [item] = await this.query("SELECT * FROM routine_plan_items WHERE id = :id", {
+      id: result.insertId
+    });
+    return toCamelRow(item);
+  }
+
+  async updateRoutinePlanItem(id, input) {
+    await this.query(
+      `UPDATE routine_plan_items
+       SET plan_time = :planTime, category = :category, amount = :amount,
+           note = :note, updated_at = CURRENT_TIMESTAMP
+       WHERE id = :id`,
+      {
+        id,
+        planTime: input.planTime,
+        category: input.category,
+        amount: input.amount || "",
+        note: input.note || ""
+      }
+    );
+
+    const [item] = await this.query("SELECT * FROM routine_plan_items WHERE id = :id", { id });
+    return item ? toCamelRow(item) : null;
+  }
+
+  async deleteRoutinePlanItem(id) {
+    const result = await this.query("DELETE FROM routine_plan_items WHERE id = :id", { id });
+    return result.affectedRows > 0;
+  }
+
   async listDocuments() {
     const rows = await this.query("SELECT * FROM info_documents ORDER BY title ASC");
     return rows.map(normalizeDocument);
