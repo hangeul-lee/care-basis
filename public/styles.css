@@ -13,6 +13,33 @@
   --accent-wash: #f0faf7;
   --danger: #9a3d34;
   --danger-soft: #fbefec;
+  --tone-mint: #158d82;
+  --tone-mint-bg: #e2f5f1;
+  --tone-mint-border: #9bd3ca;
+  --tone-coral: #bd6d5a;
+  --tone-coral-bg: #fff0eb;
+  --tone-coral-border: #ecc4b8;
+  --tone-blue: #4e83a1;
+  --tone-blue-bg: #edf7fb;
+  --tone-blue-border: #bdd8e6;
+  --tone-ink: #576776;
+  --tone-ink-bg: #eef3f5;
+  --tone-ink-border: #c7d4d8;
+  --tone-olive: #728748;
+  --tone-olive-bg: #f0f6e8;
+  --tone-olive-border: #cbd9a8;
+  --tone-green: #3b936b;
+  --tone-green-bg: #e8f6ee;
+  --tone-green-border: #acd9c0;
+  --tone-sky: #4195a5;
+  --tone-sky-bg: #e8f8f9;
+  --tone-sky-border: #afdde3;
+  --tone-red: #b35f60;
+  --tone-red-bg: #faeeee;
+  --tone-red-border: #e5c2c2;
+  --tone-gray: #647672;
+  --tone-gray-bg: #eff5f3;
+  --tone-gray-border: #c7d8d3;
   font-family:
     "Pretendard", "Apple SD Gothic Neo", "Noto Sans KR", Inter, ui-sans-serif,
     system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -455,6 +482,9 @@ textarea:focus {
 }
 
 .quick-action {
+  --tone: var(--accent);
+  --tone-bg: var(--accent-soft);
+  --tone-border: var(--line);
   display: grid;
   grid-template-rows: 24px auto auto;
   justify-items: start;
@@ -472,7 +502,11 @@ textarea:focus {
 }
 
 .quick-action:active {
-  background: var(--accent-wash);
+  background: var(--tone-bg);
+}
+
+.quick-action:hover {
+  background: color-mix(in srgb, var(--tone-bg) 58%, transparent);
 }
 
 .quick-action strong,
@@ -509,6 +543,95 @@ textarea:focus {
   height: 24px;
 }
 
+.quick-icon,
+.summary-icon,
+.category-dot {
+  color: var(--tone);
+  background: var(--tone-bg);
+  border: 1px solid var(--tone-border);
+}
+
+.quick-action.mint,
+.summary-icon.mint,
+.category-dot.mint,
+.shortcut-chip.mint {
+  --tone: var(--tone-mint);
+  --tone-bg: var(--tone-mint-bg);
+  --tone-border: var(--tone-mint-border);
+}
+
+.quick-action.coral,
+.summary-icon.coral,
+.category-dot.coral,
+.shortcut-chip.coral {
+  --tone: var(--tone-coral);
+  --tone-bg: var(--tone-coral-bg);
+  --tone-border: var(--tone-coral-border);
+}
+
+.quick-action.blue,
+.summary-icon.blue,
+.category-dot.blue,
+.shortcut-chip.blue {
+  --tone: var(--tone-blue);
+  --tone-bg: var(--tone-blue-bg);
+  --tone-border: var(--tone-blue-border);
+}
+
+.quick-action.ink,
+.summary-icon.ink,
+.category-dot.ink,
+.shortcut-chip.ink {
+  --tone: var(--tone-ink);
+  --tone-bg: var(--tone-ink-bg);
+  --tone-border: var(--tone-ink-border);
+}
+
+.quick-action.olive,
+.summary-icon.olive,
+.category-dot.olive,
+.shortcut-chip.olive {
+  --tone: var(--tone-olive);
+  --tone-bg: var(--tone-olive-bg);
+  --tone-border: var(--tone-olive-border);
+}
+
+.quick-action.green,
+.summary-icon.green,
+.category-dot.green,
+.shortcut-chip.green {
+  --tone: var(--tone-green);
+  --tone-bg: var(--tone-green-bg);
+  --tone-border: var(--tone-green-border);
+}
+
+.quick-action.sky,
+.summary-icon.sky,
+.category-dot.sky,
+.shortcut-chip.sky {
+  --tone: var(--tone-sky);
+  --tone-bg: var(--tone-sky-bg);
+  --tone-border: var(--tone-sky-border);
+}
+
+.quick-action.red,
+.summary-icon.red,
+.category-dot.red,
+.shortcut-chip.red {
+  --tone: var(--tone-red);
+  --tone-bg: var(--tone-red-bg);
+  --tone-border: var(--tone-red-border);
+}
+
+.quick-action.gray,
+.summary-icon.gray,
+.category-dot.gray,
+.shortcut-chip.gray {
+  --tone: var(--tone-gray);
+  --tone-bg: var(--tone-gray-bg);
+  --tone-border: var(--tone-gray-border);
+}
+
 .shortcut-row,
 .chip-row,
 .tag-list {
@@ -540,7 +663,9 @@ textarea:focus {
 }
 
 .shortcut-chip {
-  color: var(--ink);
+  color: var(--tone, var(--ink));
+  background: var(--tone-bg, transparent);
+  border-color: var(--tone-border, var(--line));
 }
 
 .chip.active {
@@ -628,6 +753,10 @@ textarea:focus {
 .summary-tile span {
   color: var(--muted);
   font-size: 0.72rem;
+}
+
+.summary-tile .summary-icon {
+  color: var(--tone);
 }
 
 .summary-tile b {
@@ -737,7 +866,6 @@ textarea:focus {
 .category-dot {
   width: 28px;
   height: 28px;
-  border: 1px solid var(--line);
 }
 
 .empty-state {

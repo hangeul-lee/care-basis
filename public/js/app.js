@@ -45,10 +45,10 @@ const defaultQuickSettings = {
 };
 
 const summaryGroups = [
-  { label: "먹기", icon: "formula", categories: ["분유", "모유", "수유", "이유식"] },
-  { label: "잠", icon: "sleep", categories: ["낮잠", "밤잠"] },
-  { label: "기저귀", icon: "baby", categories: ["기저귀"] },
-  { label: "외부", icon: "daycare", categories: ["어린이집", "산책"] }
+  { label: "먹기", icon: "formula", tone: "mint", categories: ["분유", "모유", "수유", "이유식"] },
+  { label: "잠", icon: "sleep", tone: "blue", categories: ["낮잠", "밤잠"] },
+  { label: "기저귀", icon: "baby", tone: "olive", categories: ["기저귀"] },
+  { label: "외부", icon: "daycare", tone: "green", categories: ["어린이집", "산책"] }
 ];
 
 const checklistCategories = ["예방접종", "영유아 건강검진", "수면", "수유/이유식", "발달", "안전"];
@@ -617,7 +617,7 @@ function TodaySummary({ entries }) {
       return h(
         "article",
         { className: "summary-tile", key: group.label, role: "listitem" },
-        h("span", { className: "summary-icon" }, h(Icon, { name: group.icon, size: 17 })),
+        h("span", { className: cx("summary-icon", group.tone) }, h(Icon, { name: group.icon, size: 17 })),
         h("div", null, h("strong", null, group.label), h("span", null, last ? `${visibleEntryTime(last)} · ${last.amount || last.category}` : "없음")),
         h("b", null, count)
       );
@@ -702,7 +702,7 @@ function RoutineQuickPanel({ babyId, date, onSaved }) {
         h(
           "button",
           {
-            className: "shortcut-chip",
+            className: cx("shortcut-chip", shortcut.tone),
             key: shortcut.label,
             type: "button",
             onClick: () => quickSave(shortcut),
