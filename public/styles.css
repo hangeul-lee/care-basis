@@ -85,7 +85,7 @@ a {
 
 .app-shell {
   min-height: 100vh;
-  padding: 18px 14px 88px;
+  padding: 18px 14px 118px;
 }
 
 .app-header {
@@ -297,17 +297,36 @@ input,
 select,
 textarea {
   width: 100%;
-  min-height: 42px;
+  min-height: 48px;
   border: 1px solid var(--line);
   border-radius: 0;
   background: var(--paper);
   color: var(--ink);
-  padding: 9px 10px;
+  padding: 11px 12px;
   outline: none;
 }
 
+select {
+  appearance: none;
+  background-image:
+    linear-gradient(45deg, transparent 50%, var(--ink) 50%),
+    linear-gradient(135deg, var(--ink) 50%, transparent 50%);
+  background-position:
+    calc(100% - 18px) 20px,
+    calc(100% - 12px) 20px;
+  background-size:
+    6px 6px,
+    6px 6px;
+  background-repeat: no-repeat;
+  padding-right: 34px;
+}
+
+input[type="time"] {
+  text-align: center;
+}
+
 textarea {
-  min-height: 96px;
+  min-height: 108px;
   resize: vertical;
 }
 
@@ -828,13 +847,42 @@ textarea:focus {
 }
 
 .routine-grid {
-  grid-template-columns: minmax(96px, 0.55fr) minmax(124px, 0.75fr);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px 0;
+  border-top: 1px solid var(--line);
+  border-left: 1px solid var(--line);
 }
 
 .routine-grid .field:nth-child(3),
 .routine-grid .field:nth-child(4),
 .admin-grid .field:last-child {
   grid-column: 1 / -1;
+}
+
+.routine-grid .field {
+  gap: 0;
+  border-right: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  background: rgba(255, 255, 251, 0.58);
+}
+
+.routine-grid .field > span {
+  min-height: 34px;
+  padding: 9px 12px 0;
+}
+
+.routine-grid input,
+.routine-grid select {
+  border: 0;
+  min-height: 56px;
+  background-color: transparent;
+  box-shadow: none;
+}
+
+.routine-grid textarea {
+  border: 0;
+  background-color: transparent;
+  box-shadow: none;
 }
 
 .date-picker {
@@ -1310,7 +1358,7 @@ textarea:focus {
   }
 
   .routine-grid {
-    grid-template-columns: 0.65fr 0.8fr 1fr 1.4fr;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
 
   .routine-grid .field:nth-child(3),
