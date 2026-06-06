@@ -241,7 +241,9 @@ async function handleApi(request, response, url) {
   }
 
   if (request.method === "GET" && pathname === "/api/news") {
-    return sendJson(response, 200, { items: await fetchParentingNews() });
+    const query = searchParams.get("q") || "";
+    const category = searchParams.get("category") || "";
+    return sendJson(response, 200, await fetchParentingNews(store, { query, category }));
   }
 
   if (request.method === "GET" && pathname === "/api/sources") {

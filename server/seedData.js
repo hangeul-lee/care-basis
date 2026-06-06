@@ -276,19 +276,92 @@ export const newsSources = [
     sourceInstitution: "보건복지부",
     sourceUrl: "https://www.mohw.go.kr/rss/board.es?mid=a10503000000&bid=0027&info",
     trustGrade: "A+",
+    sourceType: "official",
     useFor: "보건복지부 보도자료 RSS"
   },
   {
-    sourceInstitution: "대한민국 정책브리핑",
+    sourceInstitution: "대한민국 정책브리핑 정책뉴스",
+    sourceUrl: "https://www.korea.kr/rss/policy.xml",
+    trustGrade: "A+",
+    sourceType: "official",
+    useFor: "정부 정책뉴스 RSS"
+  },
+  {
+    sourceInstitution: "대한민국 정책브리핑 보도자료",
     sourceUrl: "https://www.korea.kr/rss/pressrelease.xml",
     trustGrade: "A+",
+    sourceType: "official",
     useFor: "정부 보도자료 RSS"
+  },
+  {
+    sourceInstitution: "대한민국 정책브리핑 보건복지부",
+    sourceUrl: "https://www.korea.kr/rss/dept_mw.xml",
+    trustGrade: "A+",
+    sourceType: "official",
+    useFor: "보건복지부 정책 RSS"
   },
   {
     sourceInstitution: "대한민국 정책브리핑 질병관리청",
     sourceUrl: "https://www.korea.kr/rss/dept_kdca.xml",
     trustGrade: "A+",
+    sourceType: "official",
     useFor: "질병관리청 보도자료 RSS"
+  },
+  {
+    sourceInstitution: "대한민국 정책브리핑 식품의약품안전처",
+    sourceUrl: "https://www.korea.kr/rss/dept_mfds.xml",
+    trustGrade: "A+",
+    sourceType: "official",
+    useFor: "식품·의약품 안전 보도자료 RSS"
+  },
+  {
+    sourceInstitution: "대한민국 정책브리핑 교육부",
+    sourceUrl: "https://www.korea.kr/rss/dept_moe.xml",
+    trustGrade: "A+",
+    sourceType: "official",
+    useFor: "유아교육·돌봄 정책 RSS"
+  },
+  {
+    sourceInstitution: "대한민국 정책브리핑 성평등가족부",
+    sourceUrl: "https://www.korea.kr/rss/dept_mogef.xml",
+    trustGrade: "A+",
+    sourceType: "official",
+    useFor: "가족·양육 지원 정책 RSS"
+  },
+  {
+    sourceInstitution: "대한민국 정책브리핑 경찰청",
+    sourceUrl: "https://www.korea.kr/rss/dept_npa.xml",
+    trustGrade: "A+",
+    sourceType: "official",
+    useFor: "아동 안전·사고 보도자료 RSS"
+  },
+  {
+    sourceInstitution: "대한민국 정책브리핑 소방청",
+    sourceUrl: "https://www.korea.kr/rss/dept_nfa.xml",
+    trustGrade: "A+",
+    sourceType: "official",
+    useFor: "아동 안전·응급 보도자료 RSS"
+  },
+  {
+    sourceInstitution: "연합뉴스",
+    sourceUrl: "https://www.yna.co.kr/rss/news.xml",
+    trustGrade: "A",
+    sourceType: "media",
+    useFor: "주요 레거시 매체 최신기사 RSS"
+  },
+  {
+    sourceInstitution: "SBS 뉴스 사회",
+    sourceUrl: "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=03&plink=RSSREADER",
+    trustGrade: "A",
+    sourceType: "media",
+    useFor: "주요 레거시 매체 사회 뉴스 RSS"
+  },
+  {
+    sourceInstitution: "SBS 뉴스 생활·문화",
+    sourceUrl: "https://news.sbs.co.kr/news/SectionRssFeed.do?sectionId=08&plink=RSSREADER",
+    trustGrade: "A",
+    sourceType: "media",
+    useFor: "주요 레거시 매체 생활·문화 뉴스 RSS"
   }
 ];
 

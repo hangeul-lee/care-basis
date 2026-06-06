@@ -1139,6 +1139,47 @@ textarea:focus {
   font-weight: 800;
 }
 
+.news-meta-left {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.news-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 3px 7px;
+  border: 1px solid #aacfc8;
+  background: var(--accent-soft);
+  color: var(--accent-deep);
+  font-size: 0.72rem;
+  font-weight: 850;
+}
+
+.news-tags {
+  margin-top: 10px;
+}
+
+.news-chip-row {
+  padding: 2px 0 0;
+}
+
+.archive-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px 12px;
+  color: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 780;
+}
+
+.archive-summary span {
+  overflow-wrap: anywhere;
+}
+
 .source-org {
   color: var(--muted);
   font-size: 0.8rem;

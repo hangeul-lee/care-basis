@@ -9,6 +9,7 @@ const emptyData = {
   routineEntries: [],
   routinePlanItems: [],
   infoDocuments: [],
+  newsArticles: [],
   checklistStatuses: []
 };
 
@@ -84,7 +85,8 @@ export class FileStore {
     return {
       ...emptyData,
       ...data,
-      routinePlanItems: data.routinePlanItems || []
+      routinePlanItems: data.routinePlanItems || [],
+      newsArticles: data.newsArticles || []
     };
   }
 
@@ -312,6 +314,74 @@ export class FileStore {
     data.infoDocuments = data.infoDocuments.filter((document) => document.id !== id);
     await this.write(data);
     return data.infoDocuments.length !== before;
+  }
+
+  async archiveNewsArticles(items) {
+    if (!items.length) return { savedCount: 0 };
+
+    const data = await this.read();
+    const indexByUrl = new Map(data.newsArticles.map((item, index) => [item.sourceUrl, index]));
+    const now = new Date().toISOString();
+
+    items.forEach((item) => {
+      const article = {
+        id: makeId("news"),
+        title: String(item.title || "").trim(),
+        summary: String(item.summary || "").trim(),
+        sourceInstitution: String(item.sourceInstitution || "").trim(),
+        sourceUrl: String(item.sourceUrl || "").trim(),
+        publishedAt: item.publishedAt || "",
+        category: item.category || "생활/돌봄",
+        trustGrade: item.trustGrade || inferTrustGrade(item.sourceInstitution, item.sourceUrl),
+        tags: normalizeTags(item.tags),
+        archivedAt: now,
+        updatedAt: now
+      };
+
+      const index = indexByUrl.get(article.sourceUrl);
+      if (index === undefined) {
+        data.newsArticles.push(article);
+        indexByUrl.set(article.sourceUrl, data.newsArticles.length - 1);
+      } else {
+        data.newsArticles[index] = {
+          ...data.newsArticles[index],
+          ...article,
+          id: data.newsArticles[index].id,
+          archivedAt: data.newsArticles[index].archivedAt || now
+        };
+      }
+    });
+
+    await this.write(data);
+    return { savedCount: items.length };
+  }
+
+  async listNewsArticles({ category = "", query = "" } = {}) {
+    const data = await this.read();
+    const normalizedCategory = category.trim();
+    const normalizedQuery = query.trim().toLowerCase();
+
+    return data.newsArticles
+      .filter((item) => {
+        const matchesCategory = !normalizedCategory || normalizedCategory === "전체" || item.category === normalizedCategory;
+        const haystack = [
+          item.title,
+          item.summary,
+          item.sourceInstitution,
+          item.category,
+          ...(item.tags || [])
+        ]
+          .join(" ")
+          .toLowerCase();
+        const matchesQuery = !normalizedQuery || haystack.includes(normalizedQuery);
+        return matchesCategory && matchesQuery;
+      })
+      .sort((a, b) => {
+        const publishedCompare = String(b.publishedAt || "").localeCompare(String(a.publishedAt || ""));
+        if (publishedCompare !== 0) return publishedCompare;
+        return String(b.archivedAt || "").localeCompare(String(a.archivedAt || ""));
+      })
+      .slice(0, 500);
   }
 
   async getChecklistStatuses(babyId) {

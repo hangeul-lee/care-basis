@@ -52,6 +52,7 @@ const summaryGroups = [
 ];
 
 const checklistCategories = ["예방접종", "영유아 건강검진", "수면", "수유/이유식", "발달", "안전"];
+const newsCategories = ["전체", "복지/정책", "사고/안전", "건강/감염", "보육/어린이집", "생활/돌봄"];
 
 function todayString() {
   const now = new Date();
@@ -1209,11 +1210,19 @@ function NewsCard({ item }) {
     h(
       "div",
       { className: "news-meta" },
-      h("span", null, item.sourceInstitution),
+      h(
+        "span",
+        { className: "news-meta-left" },
+        item.category ? h("span", { className: "news-badge" }, item.category) : null,
+        h("span", null, item.sourceInstitution)
+      ),
       item.publishedAt ? h("time", null, item.publishedAt) : null
     ),
     h("h3", null, item.title),
     item.summary ? h("p", null, item.summary) : null,
+    item.tags?.length
+      ? h("div", { className: "tag-list news-tags" }, item.tags.slice(0, 4).map((tag) => h("span", { key: tag }, tag)))
+      : null,
     h(
       "a",
       { href: item.sourceUrl, target: "_blank", rel: "noreferrer" },
@@ -1226,24 +1235,48 @@ function NewsCard({ item }) {
 function NewsView() {
   const [items, setItems] = useState([]);
   const [sources, setSources] = useState([]);
+  const [query, setQuery] = useState("");
+  const [category, setCategory] = useState("전체");
+  const [meta, setMeta] = useState({ updatedAt: "", sourceCount: 0, fetchedCount: 0, savedCount: 0 });
   const [error, setError] = useState("");
 
-  async function loadNews() {
+  async function loadNews(nextCategory = category, nextQuery = query) {
     try {
       setError("");
-      const result = await api("/api/news");
+      const params = new URLSearchParams();
+      if (nextCategory && nextCategory !== "전체") params.set("category", nextCategory);
+      if (nextQuery.trim()) params.set("q", nextQuery.trim());
+      const result = await api(`/api/news${params.toString() ? `?${params.toString()}` : ""}`);
       setItems(result.items);
+      setMeta({
+        updatedAt: result.updatedAt || "",
+        sourceCount: result.sourceCount || 0,
+        fetchedCount: result.fetchedCount || 0,
+        savedCount: result.savedCount || 0
+      });
     } catch (err) {
       setError(err.message);
     }
   }
 
   useEffect(() => {
-    loadNews();
+    loadNews("전체", "");
     api("/api/sources")
       .then((result) => setSources(result.sources))
       .catch(() => setSources([]));
   }, []);
+
+  function submit(event) {
+    event.preventDefault();
+    loadNews(category, query);
+  }
+
+  function chooseCategory(nextCategory) {
+    setCategory(nextCategory);
+    loadNews(nextCategory, query);
+  }
+
+  const updatedLabel = meta.updatedAt ? new Date(meta.updatedAt).toLocaleString("ko-KR") : "";
 
   return h(
     "section",
@@ -1251,13 +1284,47 @@ function NewsView() {
     h(
       "div",
       { className: "section-header" },
-      h("div", null, h("h2", null, "육아 뉴스"), h("p", null, "정부·공공기관 RSS에서 육아 관련 소식만 모아봅니다.")),
-      h(IconButton, { icon: "search", label: "새로고침", onClick: loadNews })
+      h("div", null, h("h2", null, "육아 뉴스"), h("p", null, "공식기관·레거시 매체 RSS에서 육아 관련 기사만 저장해 아카이브합니다.")),
+      h(IconButton, { icon: "search", label: "새로고침", onClick: () => loadNews(category, query) })
     ),
-    h(SourceRegistry, { sources: sources.filter((source) => /RSS|뉴스|정책|보도|정부/.test(`${source.useFor} ${source.sourceInstitution}`)) }),
+    h(SourceRegistry, { sources: sources.filter((source) => /RSS|뉴스|정책|보도|정부|매체/.test(`${source.useFor} ${source.sourceInstitution}`)) }),
+    h(
+      "form",
+      { className: "search-box", onSubmit: submit },
+      h(Icon, { name: "search", size: 18 }),
+      h("input", {
+        value: query,
+        onChange: (event) => setQuery(event.target.value),
+        placeholder: "육아휴직, 어린이집, 사고, 백일해"
+      }),
+      h(ActionButton, { icon: "search", type: "submit" }, "검색")
+    ),
+    h(
+      "div",
+      { className: "chip-row news-chip-row" },
+      newsCategories.map((item) =>
+        h(
+          "button",
+          {
+            key: item,
+            type: "button",
+            className: cx("chip", category === item && "active"),
+            onClick: () => chooseCategory(item)
+          },
+          item
+        )
+      )
+    ),
+    h(
+      "div",
+      { className: "archive-summary" },
+      h("span", null, `${items.length}개 표시`),
+      meta.sourceCount ? h("span", null, `허용 RSS ${meta.sourceCount}개`) : null,
+      updatedLabel ? h("span", null, `최근 수집 ${updatedLabel}`) : null
+    ),
     error ? h("p", { className: "form-error" }, error) : null,
     items.length === 0
-      ? h(EmptyState, { icon: "book", title: "표시할 육아 뉴스가 없습니다.", body: "공식 RSS가 응답하지 않았거나 최근 항목에 육아 키워드가 없을 수 있습니다." })
+      ? h(EmptyState, { icon: "book", title: "표시할 육아 뉴스가 없습니다.", body: "수집 대상 RSS가 응답하지 않았거나 선택한 조건에 맞는 기사가 아직 없습니다." })
       : h("div", { className: "news-grid" }, items.map((item) => h(NewsCard, { key: `${item.sourceUrl}-${item.title}`, item })))
   );
 }

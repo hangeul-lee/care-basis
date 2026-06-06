@@ -60,6 +60,24 @@ CREATE TABLE IF NOT EXISTS info_documents (
   FULLTEXT KEY ft_info_search (title, summary, source_institution)
 );
 
+CREATE TABLE IF NOT EXISTS news_articles (
+  id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+  title VARCHAR(240) NOT NULL,
+  summary TEXT,
+  source_institution VARCHAR(160) NOT NULL,
+  source_url VARCHAR(700) NOT NULL,
+  published_at DATE,
+  category VARCHAR(40) NOT NULL DEFAULT '생활/돌봄',
+  trust_grade ENUM('A+', 'A', 'B') NOT NULL DEFAULT 'A',
+  tags JSON NOT NULL,
+  archived_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  UNIQUE KEY uq_news_source_url (source_url),
+  INDEX idx_news_published (published_at),
+  INDEX idx_news_category (category),
+  FULLTEXT KEY ft_news_search (title, summary, source_institution)
+);
+
 CREATE TABLE IF NOT EXISTS checklist_statuses (
   id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   baby_id BIGINT UNSIGNED NOT NULL,

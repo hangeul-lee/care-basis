@@ -22,6 +22,14 @@ function normalizeDocument(row) {
   };
 }
 
+function normalizeNewsArticle(row) {
+  const article = toCamelRow(row);
+  return {
+    ...article,
+    tags: parseTags(article.tags)
+  };
+}
+
 function sslOptions(config) {
   if (!config.ssl) return undefined;
 
@@ -339,6 +347,55 @@ export class MySqlStore {
   async deleteDocument(id) {
     const result = await this.query("DELETE FROM info_documents WHERE id = :id", { id });
     return result.affectedRows > 0;
+  }
+
+  async archiveNewsArticles(items) {
+    if (!items.length) return { savedCount: 0 };
+
+    for (const item of items) {
+      await this.query(
+        `INSERT INTO news_articles
+         (title, summary, source_institution, source_url, published_at, category, trust_grade, tags)
+         VALUES (:title, :summary, :sourceInstitution, :sourceUrl, :publishedAt, :category, :trustGrade, :tags)
+         ON DUPLICATE KEY UPDATE
+           title = VALUES(title),
+           summary = VALUES(summary),
+           source_institution = VALUES(source_institution),
+           published_at = VALUES(published_at),
+           category = VALUES(category),
+           trust_grade = VALUES(trust_grade),
+           tags = VALUES(tags),
+           updated_at = CURRENT_TIMESTAMP`,
+        {
+          title: String(item.title || "").trim(),
+          summary: String(item.summary || "").trim(),
+          sourceInstitution: String(item.sourceInstitution || "").trim(),
+          sourceUrl: String(item.sourceUrl || "").trim(),
+          publishedAt: item.publishedAt || null,
+          category: item.category || "생활/돌봄",
+          trustGrade: item.trustGrade || "A",
+          tags: JSON.stringify(normalizeTags(item.tags))
+        }
+      );
+    }
+
+    return { savedCount: items.length };
+  }
+
+  async listNewsArticles({ category = "", query = "" } = {}) {
+    const normalizedCategory = category.trim();
+    const normalizedQuery = query.trim();
+    const q = `%${normalizedQuery}%`;
+    const rows = await this.query(
+      `SELECT * FROM news_articles
+       WHERE (:category = '' OR :category = '전체' OR category = :category)
+         AND (:query = '' OR title LIKE :q OR summary LIKE :q OR source_institution LIKE :q OR category LIKE :q OR tags LIKE :q)
+       ORDER BY COALESCE(published_at, DATE(archived_at)) DESC, archived_at DESC
+       LIMIT 500`,
+      { category: normalizedCategory, query: normalizedQuery, q }
+    );
+
+    return rows.map(normalizeNewsArticle);
   }
 
   async getChecklistStatuses(babyId) {
