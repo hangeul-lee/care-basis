@@ -123,6 +123,20 @@ function visiblePlanTime(item) {
   return String(item.planTime || "").slice(0, 5);
 }
 
+function minutesFromTime(value) {
+  const [hours, minutes] = visiblePlanTime({ planTime: value }).split(":").map(Number);
+  return (Number(hours) || 0) * 60 + (Number(minutes) || 0);
+}
+
+function nextPlanItemForDate(items, date) {
+  if (!items.length) return null;
+  if (date !== todayString()) return items[0];
+
+  const now = new Date();
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+  return items.find((item) => minutesFromTime(item.planTime) >= nowMinutes) || items[0];
+}
+
 function findLastEntry(entries, categories) {
   return [...entries]
     .reverse()
@@ -625,6 +639,34 @@ function TodaySummary({ entries }) {
   );
 }
 
+function NextPlanPanel({ item, onRecordPlanned, onRecordNow }) {
+  if (!item) return null;
+  const meta = categoryMeta(item.category);
+
+  return h(
+    "section",
+    { className: "next-plan-panel" },
+    h(
+      "div",
+      { className: "next-plan-main" },
+      h("span", { className: cx("category-dot", meta.tone) }, h(Icon, { name: meta.icon, size: 16 })),
+      h(
+        "div",
+        null,
+        h("span", null, "다음 일과"),
+        h("strong", null, `${visiblePlanTime(item)} · ${item.category}${item.amount ? ` · ${item.amount}` : ""}`),
+        item.note ? h("p", null, item.note) : null
+      )
+    ),
+    h(
+      "div",
+      { className: "next-plan-actions" },
+      h(ActionButton, { variant: "secondary", icon: "check", onClick: () => onRecordPlanned(item) }, "예정 기록"),
+      h(ActionButton, { icon: "plus", onClick: () => onRecordNow(item) }, "지금 기록")
+    )
+  );
+}
+
 function RoutineQuickPanel({ babyId, date, onSaved }) {
   const [busyKey, setBusyKey] = useState("");
   const [error, setError] = useState("");
@@ -759,6 +801,7 @@ function RoutineQuickPanel({ babyId, date, onSaved }) {
 function TodayView({ baby }) {
   const [date, setDate] = useState(todayString());
   const [entries, setEntries] = useState([]);
+  const [planItems, setPlanItems] = useState([]);
   const [editingEntry, setEditingEntry] = useState(null);
   const [showDetailForm, setShowDetailForm] = useState(false);
   const [error, setError] = useState("");
@@ -774,18 +817,54 @@ function TodayView({ baby }) {
     }
   }
 
+  async function loadPlanItems() {
+    if (!baby) return;
+    try {
+      const result = await api(`/api/routine-plan?babyId=${encodeURIComponent(baby.id)}`);
+      setPlanItems(result.items);
+    } catch {
+      setPlanItems([]);
+    }
+  }
+
   useEffect(() => {
     loadEntries();
   }, [baby?.id, date]);
+
+  useEffect(() => {
+    loadPlanItems();
+  }, [baby?.id]);
 
   async function removeEntry(entry) {
     await api(`/api/routines/${entry.id}`, { method: "DELETE" });
     await loadEntries();
   }
 
+  async function recordPlanItem(item, useCurrentTime = false) {
+    try {
+      setError("");
+      await api("/api/routines", {
+        method: "POST",
+        body: JSON.stringify({
+          babyId: baby.id,
+          entryDate: date,
+          entryTime: useCurrentTime ? currentTimeString() : visiblePlanTime(item),
+          category: item.category,
+          amount: item.amount || "",
+          note: item.note || ""
+        })
+      });
+      await loadEntries();
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   if (!baby) {
     return h(EmptyState, { icon: "profile", title: "등록된 아기 프로필이 없습니다.", body: "프로필을 먼저 등록해 주세요." });
   }
+
+  const nextPlanItem = nextPlanItemForDate(planItems, date);
 
   return h(
     "section",
@@ -802,6 +881,11 @@ function TodayView({ baby }) {
       )
     ),
     h(TodaySummary, { entries }),
+    h(NextPlanPanel, {
+      item: nextPlanItem,
+      onRecordPlanned: (item) => recordPlanItem(item, false),
+      onRecordNow: (item) => recordPlanItem(item, true)
+    }),
     h(RoutineQuickPanel, { babyId: baby.id, date, onSaved: loadEntries }),
     editingEntry || showDetailForm
       ? h(RoutineForm, {
@@ -884,6 +968,25 @@ function RoutinePlanView({ baby }) {
     await loadItems();
   }
 
+  async function recordToday(item) {
+    try {
+      setError("");
+      await api("/api/routines", {
+        method: "POST",
+        body: JSON.stringify({
+          babyId: baby.id,
+          entryDate: todayString(),
+          entryTime: visiblePlanTime(item),
+          category: item.category,
+          amount: item.amount || "",
+          note: item.note || ""
+        })
+      });
+    } catch (err) {
+      setError(err.message);
+    }
+  }
+
   if (!baby) {
     return h(EmptyState, { icon: "profile", title: "등록된 아기 프로필이 없습니다.", body: "프로필을 먼저 등록해 주세요." });
   }
@@ -932,6 +1035,7 @@ function RoutinePlanView({ baby }) {
               h(
                 "div",
                 { className: "row-actions" },
+                h(IconButton, { icon: "check", label: "오늘 기록", onClick: () => recordToday(item) }),
                 h(IconButton, { icon: "edit", label: "수정", onClick: () => setEditingItem(item) }),
                 h(IconButton, { icon: "trash", label: "삭제", variant: "danger", onClick: () => removeItem(item) })
               )
