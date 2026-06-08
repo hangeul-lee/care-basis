@@ -56,8 +56,7 @@ CREATE TABLE IF NOT EXISTS info_documents (
   is_trusted BOOLEAN NOT NULL DEFAULT TRUE,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  UNIQUE KEY uq_source_url (source_url),
-  FULLTEXT KEY ft_info_search (title, summary, source_institution)
+  UNIQUE KEY uq_source_url (source_url)
 );
 
 CREATE TABLE IF NOT EXISTS news_articles (
@@ -74,8 +73,7 @@ CREATE TABLE IF NOT EXISTS news_articles (
   updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   UNIQUE KEY uq_news_source_url (source_url),
   INDEX idx_news_published (published_at),
-  INDEX idx_news_category (category),
-  FULLTEXT KEY ft_news_search (title, summary, source_institution)
+  INDEX idx_news_category (category)
 );
 
 CREATE TABLE IF NOT EXISTS checklist_statuses (
