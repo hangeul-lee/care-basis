@@ -1,0 +1,25 @@
+{
+  "id": "/",
+  "name": "케어베이시스 · 육아 팁(이로운)",
+  "short_name": "육아 팁(이로운)",
+  "lang": "ko",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ffa28b",
+  "icons": [
+    {
+      "src": "/icons/care-tips-192-v20261025.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/care-tips-512-v20261025.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
